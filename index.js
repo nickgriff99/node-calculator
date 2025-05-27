@@ -7,7 +7,7 @@ const rl = readline.createInterface({
 
 function askOperation() {
   rl.question("What operation would you like to perform? (/, *, -, +): ", (op) => {
-    if (['/', '*', '-', '+'].includes(op)) {
+      if (['/', '*', '-', '+'].includes(op)) {
       console.log(`You chose the operation: ${op}`);
       askFirstNumber(op);
     } else {
@@ -71,22 +71,8 @@ function calculate(op, num1, num2) {
       rl.close();
       return;
   }
-  console.log(`Result: ${a} ${op} ${b} = ${result}`);
+  console.log(`The result is: ${a} ${op} ${b} = ${result}`);
   askOperation();
-}
-
-function askToContinue() {
-  rl.question("Do you want to perform another operation? (yes/no): ", (answer) => {
-    if (answer.toLowerCase() === 'yes') {
-      askOperation();
-    } else if (answer.toLowerCase() === 'no') {
-      console.log("Goodbye!");
-      rl.close();
-    } else {
-      console.log("Invalid input. Please answer 'yes' or 'no'.");
-      askToContinue();
-    }
-  });
 }
 
 const arguments = process.argv.slice(2);
