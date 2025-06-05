@@ -1,87 +1,88 @@
-const readline = require('readline');
+const rs = require('readline-sync');
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+const operationsList = ['/', '*', '-', '+'];
 
-function askOperation() {
-  rl.question("What operation would you like to perform? (/, *, -, +): ", (op) => {
-      if (['/', '*', '-', '+'].includes(op)) {
-      console.log(`You chose the operation: ${op}`);
-      askFirstNumber(op);
-    } else {
-      console.log("That is not a valid operation.");
-      askOperation();
-    }
-  });
+const askOperation = (operationsList) => {
+  return rs.question(
+    `\nWhat operation would you like to perform? (${operationsList.join(', ')})\n` +
+    "Or enter a full equation:\n",
+  );
 }
 
-function askFirstNumber(op) {
-  rl.question("Enter the first number: ", (num1) => {
-    if (isNaN(num1)) {
-      console.log("That is not number.");
-      askFirstNumber(op);
-    }
-    else {
-      console.log(`The first number is: ${num1}`);
-      askSecondNumber(op, num1);
-    }
-  })
+const getNumbers = (order) => rs.questionInt(`Enter the ${order} number: `, {
+  limitMessage: "That is not a valid operation.",
+  limit: input => !isNaN(Number(input)),
+  limitMessage: "This is not a number.",
 }
+) ;
 
-function askSecondNumber(op, num1) {
-  rl.question("Please enter the second number: ", (num2) => {
-    if (isNaN(num2)) {
-      console.log("That is not number.");
-      askSecondNumber(op, num1);
-    }
-    else {
-      console.log(`The second number is: ${num2}`);
-      calculate(op, num1, num2);
-    }
-  })
-}
-
-function calculate(op, num1, num2) {
-  const a = Number(num1);
-  const b = Number(num2);
-  let result;
-
-  switch (op) {
+function calculate(operationTask, numberOne, numberTwo) {
+  switch (operationTask) {
     case '/':
-      if (b === 0) {
+      if (numberTwo === 0) {
         console.log("Error: Division by zero is not allowed.");
-        rl.close();
-        return;
       }
-      result = a / b;
-      break;
+      return numberOne / numberTwo;
     case '*':
-      result = a * b;
-      break;
+      return numberOne * numberTwo;
     case '-':
-      result = a - b;
-      break;
+      return numberOne - numberTwo;
     case '+':
-      result = a + b;
-      break;
-      default:
-      console.log("Unknown operation.");
-      rl.close();
-      return;
+      return numberOne + numberTwo;
   }
-  console.log(`The result is: ${a} ${op} ${b} = ${result}`);
-  askOperation();
 }
 
-const arguments = process.argv.slice(2);
-if (arguments.length === 3 && ['/', '*', '-', '+'].includes(arguments[1]) && !isNaN(arguments[0]) && !isNaN(arguments[2])) {
-  calculate(arguments[1], arguments[0], arguments[2]);
-} else if (arguments.length === 0) {
-  askOperation();
-} else {
-  console.log("Usage: node index.js <num1> <operation> <num2>");
-  console.log("Example: node index.js 5 + 3");
-  rl.close();
+function parseEquation(equation) {
+  const match = equation.match(/^(\d+)\s*([\+\-\*\/])\s*(\d+)$/);
+  if (!match) return null;
+  return {
+    firstNumber: parseInt(match[1], 10),
+    operator: match[2],
+    secondNumber: parseInt(match[3], 10),
+  }
 }
+
+const startCalculator = (operationsList) => {
+  while (true) {
+    try {
+    const operation = askOperation(operationsList);
+    const parsedOperation = parseEquation(operation);
+    if (parsedOperation && operationsList.includes(parsedOperation.operator)) {
+      if (parsedOperation.operator === '/' && parsedOperation.secondNumber === 0) {
+        console.log("Error: Division by zero is not allowed.");
+        continue;
+      }
+      const result = calculate(parsedOperation.operator, parsedOperation.firstNumber, parsedOperation.secondNumber);
+      console.log(`The result is: ${result}`);
+      break;
+    }
+    if (!operationsList.includes(operation)) {
+      console.log("That is not a valid operation.");
+      continue;
+    }
+    const firstNumber = getNumbers('first');
+    if (isNaN(firstNumber)) {
+      console.log("This is not a number.");
+      continue;
+    }
+    const secondNumber = getNumbers('second');
+    if (isNaN(secondNumber)) {
+      console.log("This is not a number.");
+      continue;
+    }
+    if (operation === '/' && secondNumber === 0) {
+      console.log("Error: Division by zero is not allowed.");
+      continue;
+    }
+    const result = calculate(operation, firstNumber, secondNumber);
+    console.log(`The result is: ${result}`);
+    break;
+    } catch (error) {
+    console.log("An error occured: ", error.message);
+    continue;
+    }
+  }
+}
+
+startCalculator(operationsList);
+
